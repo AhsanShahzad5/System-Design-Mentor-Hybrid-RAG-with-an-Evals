@@ -116,9 +116,9 @@ With the standard LangSmith environment variables configured, ingestion creates
 a parent trace named `book-ingestion-pipeline`. It records a compact run summary
 instead of attaching thousands of chunks as trace output.
 
-## Planned hybrid retriever
+## Hybrid retrieval and reranking
 
-Retrieval is a separate query-time pipeline and is not part of ingestion:
+Retrieval is implemented as a separate query-time pipeline:
 
 ```text
 User query
@@ -131,8 +131,27 @@ Final retrieved LangChain documents
 Optional reranker
 ```
 
-Dense and BM25 searches will produce independent candidate lists. RRF will merge
-their ranks without comparing incompatible raw scores. Retrieval, RRF,
-reranking, prompting, and answer generation belong to the runtime RAG pipeline.
+Dense and BM25 searches produce independent candidate lists. RRF merges their
+ranks without comparing incompatible raw scores, and Pinecone's
+`bge-reranker-v2-m3` model selects the final results.
+
+Set `QUERY` in `run_retrieval_pipeline.py`, then run:
+
+```powershell
+uv run python run_retrieval_pipeline.py
+```
+
+Current retrieval settings are defined in `run_retrieval_pipeline.py`:
+
+```python
+DENSE_TOP_K = 20
+BM25_TOP_K = 20
+FUSED_TOP_K = 20
+FINAL_TOP_K = 5
+```
+
+The reusable components live under `retrieval/`, while
+`run_retrieval_pipeline.py` constructs the dependencies and runs a query.
+Prompting and answer generation remain part of the future runtime RAG pipeline.
 
 ---
