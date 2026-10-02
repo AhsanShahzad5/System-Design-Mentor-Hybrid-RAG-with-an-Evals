@@ -169,12 +169,12 @@ Query
   → convert records into LangChain Documents
   → format their text and metadata into the prompt
   → LLM
-  → grounded answer with section citations
+  → grounded answer
 ```
 
 After hybrid retrieval, RRF, and reranking, `run_rag_pipeline.py` sends the final
 book passages to `gpt-5.6-terra`. The generation prompt is intentionally
-context-only: it requires section-level citations, explicitly abstains when the
+context-only: it keeps source labels internal, explicitly abstains when the
 retrieved passages are insufficient, and teaches concepts using an
 intuition-first mentor style.
 

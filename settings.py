@@ -49,7 +49,7 @@ class Settings(BaseSettings):
 
     # Reranking
     rerank_model: str = "bge-reranker-v2-m3"
-    generation_model: str = "gpt-5.6-terra"
+    generation_model: str = "gpt-5.6-luna"
 
 
 @lru_cache(maxsize=1)

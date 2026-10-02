@@ -1,3 +1,6 @@
+from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
+from functools import partial
 from typing import Any
 
 from langchain_core.documents import Document
@@ -43,19 +46,29 @@ class RetrievalPipeline:
         if not query.strip():
             raise ValueError("The retrieval query cannot be empty.")
 
-        dense_documents = retrieve_dense(
+        dense_retrieval = partial(
+            retrieve_dense,
             query=query,
             embeddings=self._embeddings,
             pinecone_index=self._pinecone_index,
             namespace=self._namespace,
             top_k=self._dense_top_k,
         )
-        bm25_documents = retrieve_bm25(
+        bm25_retrieval = partial(
+            retrieve_bm25,
             query=query,
             pinecone_index=self._pinecone_index,
             namespace=self._namespace,
             top_k=self._bm25_top_k,
         )
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            dense_future = executor.submit(copy_context().run, dense_retrieval)
+            bm25_future = executor.submit(copy_context().run, bm25_retrieval)
+
+            dense_documents = dense_future.result()
+            bm25_documents = bm25_future.result()
+
         fused_documents = reciprocal_rank_fusion(
             ranked_lists=[dense_documents, bm25_documents],
             top_k=self._fused_top_k,
