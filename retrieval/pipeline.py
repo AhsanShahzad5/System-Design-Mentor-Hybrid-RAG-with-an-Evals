@@ -25,6 +25,7 @@ class RetrievalPipeline:
         bm25_top_k: int = 20,
         fused_top_k: int = 20,
         final_top_k: int = 5,
+        rrf_k: int = 60,
     ) -> None:
         self._embeddings = embeddings
         self._pinecone = pinecone
@@ -35,6 +36,7 @@ class RetrievalPipeline:
         self._bm25_top_k = bm25_top_k
         self._fused_top_k = fused_top_k
         self._final_top_k = final_top_k
+        self._rrf_k = rrf_k
 
     @traceable(name="retrieval-pipeline", run_type="chain")
     def retrieve(self, query: str) -> list[Document]:
@@ -57,6 +59,7 @@ class RetrievalPipeline:
         fused_documents = reciprocal_rank_fusion(
             ranked_lists=[dense_documents, bm25_documents],
             top_k=self._fused_top_k,
+            rrf_k=self._rrf_k,
         )
         return rerank_documents(
             query=query,

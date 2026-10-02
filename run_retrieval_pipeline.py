@@ -5,30 +5,36 @@ from langchain_openai import OpenAIEmbeddings
 from langsmith import traceable
 from pinecone import Pinecone
 
-from ingestion.helpers import require_environment_variable
 from retrieval import RetrievalPipeline
-
-EMBEDDING_MODEL = "text-embedding-3-large"
-EMBEDDING_DIMENSIONS = 3072
-RERANK_MODEL = "bge-reranker-v2-m3"
-PINECONE_NAMESPACE = "books"
-DENSE_TOP_K = 20
-BM25_TOP_K = 20
-FUSED_TOP_K = 20
-FINAL_TOP_K = 5
+from settings import get_settings
 
 load_dotenv()
+
+settings = get_settings()
+
+OPENAI_API_KEY = settings.openai_api_key.get_secret_value()
+PINECONE_API_KEY = settings.pinecone_api_key.get_secret_value()
+PINECONE_INDEX_NAME = settings.pinecone_index_name
+PINECONE_NAMESPACE = settings.pinecone_namespace
+EMBEDDING_MODEL = settings.embedding_model
+EMBEDDING_DIMENSIONS = settings.embedding_dimensions
+DENSE_TOP_K = settings.dense_top_k
+BM25_TOP_K = settings.bm25_top_k
+FUSED_TOP_K = settings.fused_top_k
+FINAL_TOP_K = settings.final_top_k
+RRF_K = settings.rrf_k
+RERANK_MODEL = settings.rerank_model
 
 
 @traceable(name="hybrid-retrieval-pipeline", run_type="retriever")
 def retrieve(query: str):
-    pinecone_api_key = require_environment_variable("PINECONE_API_KEY")
-    pinecone_index_name = require_environment_variable("PINECONE_INDEX_NAME")
-    require_environment_variable("OPENAI_API_KEY")
+    pinecone_api_key = settings.pinecone_api_key.get_secret_value()
+    pinecone_index_name = settings.pinecone_index_name
 
     embeddings = OpenAIEmbeddings(
         model=EMBEDDING_MODEL,
         dimensions=EMBEDDING_DIMENSIONS,
+        api_key=settings.openai_api_key,
     )
     pinecone = Pinecone(api_key=pinecone_api_key)
     pipeline = RetrievalPipeline(
@@ -41,6 +47,7 @@ def retrieve(query: str):
         bm25_top_k=BM25_TOP_K,
         fused_top_k=FUSED_TOP_K,
         final_top_k=FINAL_TOP_K,
+        rrf_k=RRF_K,
     )
     return pipeline.retrieve(query)
 

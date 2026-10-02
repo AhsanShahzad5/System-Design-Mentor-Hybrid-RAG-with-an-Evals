@@ -82,7 +82,7 @@ The ingestion pipeline:
 5. Generates dense embeddings with `text-embedding-3-large`.
 6. Stores each embedding, its original text, and metadata in Pinecone.
 
-Current settings are defined in `run_ingestion_pipeline.py`:
+Application settings are centralized in `settings.py`:
 
 ```python
 EMBEDDING_MODEL = "text-embedding-3-large"
@@ -141,7 +141,7 @@ Set `QUERY` in `run_retrieval_pipeline.py`, then run:
 uv run python run_retrieval_pipeline.py
 ```
 
-Current retrieval settings are defined in `run_retrieval_pipeline.py`:
+Current retrieval settings are defined in `settings.py`:
 
 ```python
 DENSE_TOP_K = 20

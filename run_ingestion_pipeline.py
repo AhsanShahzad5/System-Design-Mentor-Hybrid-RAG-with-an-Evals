@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
@@ -9,20 +8,26 @@ from pinecone import Pinecone
 from document_processing import BOOKS
 from document_processing.document_store import document_path
 from ingestion import IngestionPipeline, build_text_splitter
-from ingestion.helpers import ensure_hybrid_index, require_environment_variable
-
-EMBEDDING_MODEL = "text-embedding-3-large"
-EMBEDDING_DIMENSIONS = 3072
-CHUNK_SIZE = 1200
-CHUNK_OVERLAP = 150
-EMBEDDING_BATCH_SIZE = 100
-PINECONE_UPSERT_BATCH_SIZE = 20
-PINECONE_NAMESPACE = "books"
-PINECONE_CLOUD = "aws"
-PINECONE_REGION = "us-east-1"
-PROCESSED_DOCUMENTS_DIRECTORY = Path("processed_documents")
+from ingestion.helpers import ensure_hybrid_index
+from settings import get_settings
 
 load_dotenv()
+
+settings = get_settings()
+
+OPENAI_API_KEY = settings.openai_api_key.get_secret_value()
+PINECONE_API_KEY = settings.pinecone_api_key.get_secret_value()
+PINECONE_INDEX_NAME = settings.pinecone_index_name
+PINECONE_NAMESPACE = settings.pinecone_namespace
+PINECONE_CLOUD = settings.pinecone_cloud
+PINECONE_REGION = settings.pinecone_region
+EMBEDDING_MODEL = settings.embedding_model
+EMBEDDING_DIMENSIONS = settings.embedding_dimensions
+EMBEDDING_BATCH_SIZE = settings.embedding_batch_size
+PINECONE_UPSERT_BATCH_SIZE = settings.pinecone_upsert_batch_size
+CHUNK_SIZE = settings.chunk_size
+CHUNK_OVERLAP = settings.chunk_overlap
+PROCESSED_DOCUMENTS_DIRECTORY = settings.processed_documents_directory
 
 
 @traceable(name="book-ingestion-pipeline", run_type="chain")
@@ -33,19 +38,19 @@ def main():
         format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     )
 
-    pinecone_api_key = require_environment_variable("PINECONE_API_KEY")
-    pinecone_index_name = require_environment_variable("PINECONE_INDEX_NAME")
-    require_environment_variable("OPENAI_API_KEY")
+    pinecone_api_key = settings.pinecone_api_key.get_secret_value()
+    pinecone_index_name = settings.pinecone_index_name
 
     embeddings = OpenAIEmbeddings(
         model=EMBEDDING_MODEL,
         dimensions=EMBEDDING_DIMENSIONS,
+        api_key=settings.openai_api_key,
     )
     pinecone = Pinecone(api_key=pinecone_api_key)
     ensure_hybrid_index(
         pinecone=pinecone,
         index_name=pinecone_index_name,
-        embedding_dimensions=EMBEDDING_DIMENSIONS,
+        embedding_dimensions=settings.embedding_dimensions,
         cloud=PINECONE_CLOUD,
         region=PINECONE_REGION,
     )
@@ -55,8 +60,8 @@ def main():
             document_path(PROCESSED_DOCUMENTS_DIRECTORY, book.book_id) for book in BOOKS
         ],
         text_splitter=build_text_splitter(
-            chunk_size=CHUNK_SIZE,
-            chunk_overlap=CHUNK_OVERLAP,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
         ),
         embeddings=embeddings,
         pinecone_index=pinecone.index(name=pinecone_index_name),
@@ -69,7 +74,7 @@ def main():
     chunks = pipeline.run()
     return {
         "index_name": pinecone_index_name,
-        "namespace": PINECONE_NAMESPACE,
+        "namespace": settings.pinecone_namespace,
         "chunks_ingested": len(chunks),
     }
 

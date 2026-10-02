@@ -1,12 +1,14 @@
 import logging
-from pathlib import Path
 
 from document_processing import BOOKS, DocumentProcessingPipeline
+from settings import get_settings
 
-PROCESSED_DOCUMENTS_DIRECTORY = Path("processed_documents")
+settings = get_settings()
+
+PROCESSED_DOCUMENTS_DIRECTORY = settings.processed_documents_directory
 
 
-def main() -> dict[str, Path]:
+def main():
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
