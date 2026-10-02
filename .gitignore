@@ -1,0 +1,25 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+.uv-cache/
+
+
+books_data/
+
+image.png 
+image-1.png
+
+experiments/
+
+# Generated document-processing artifacts
+processed_documents/
+
+
+.env
