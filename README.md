@@ -155,3 +155,38 @@ The reusable components live under `retrieval/`, while
 Prompting and answer generation remain part of the future runtime RAG pipeline.
 
 ---
+# Grounded answer generation
+
+The complete query flow is:
+
+```text
+Query
+  → query embedding
+  → Pinecone dense + BM25 retrieval
+  → RRF
+  → reranking
+  → top 5 Pinecone records
+  → convert records into LangChain Documents
+  → format their text and metadata into the prompt
+  → LLM
+  → grounded answer with section citations
+```
+
+After hybrid retrieval, RRF, and reranking, `run_rag_pipeline.py` sends the final
+book passages to `gpt-5.6-terra`. The generation prompt is intentionally
+context-only: it requires section-level citations, explicitly abstains when the
+retrieved passages are insufficient, and teaches concepts using an
+intuition-first mentor style.
+
+Generation code is separated by responsibility:
+
+- `generation/prompts.py` contains the mentor and grounding instructions.
+- `generation/helpers.py` turns retrieved documents into labeled, citable sources.
+- `generation/pipeline.py` composes retrieval, context formatting, and generation.
+- `run_rag_pipeline.py` is the executable entry point for manual end-to-end tests.
+
+Edit `QUESTION` in `run_rag_pipeline.py`, then run:
+
+```bash
+uv run run_rag_pipeline.py
+```
