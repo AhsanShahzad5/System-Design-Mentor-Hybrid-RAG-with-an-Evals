@@ -152,41 +152,47 @@ FINAL_TOP_K = 5
 
 The reusable components live under `retrieval/`, while
 `run_retrieval_pipeline.py` constructs the dependencies and runs a query.
-Prompting and answer generation remain part of the future runtime RAG pipeline.
 
 ---
-# Grounded answer generation
+# LangGraph RAG workflow
 
 The complete query flow is:
 
 ```text
-Query
-  → query embedding
-  → Pinecone dense + BM25 retrieval
-  → RRF
-  → reranking
-  → top 5 Pinecone records
-  → convert records into LangChain Documents
-  → format their text and metadata into the prompt
-  → LLM
-  → grounded answer
+Query + conversation history
+  → query analysis
+      ├── final_query
+      └── route
+          ├── catalogue
+          │     → complete book catalogue JSON
+          │     → catalogue answer
+          └── rag_retrieval
+                → Pinecone dense + BM25 retrieval in parallel
+                → RRF
+                → reranking
+                → top 5 LangChain Documents
+                → grounded generation
 ```
 
-After hybrid retrieval, RRF, and reranking, `run_rag_pipeline.py` sends the final
-book passages to `gpt-5.6-terra`. The generation prompt is intentionally
-context-only: it keeps source labels internal, explicitly abstains when the
-retrieved passages are insufficient, and teaches concepts using an
-intuition-first mentor style.
+The query-analysis node preserves a self-contained query and rewrites it only
+when conversation history is required. It returns exactly `final_query` and a
+route of either `catalogue` or `rag_retrieval`.
+
+Catalogue questions use `rag/data/book_catalogue.json`, which contains only the
+five book titles and their ordered chapter numbers and names. Knowledge
+questions reuse the existing hybrid retrieval and grounded generation
+pipeline. GPT-5.6 Luna is used with low verbosity.
 
 Generation code is separated by responsibility:
 
 - `generation/prompts.py` contains the mentor and grounding instructions.
-- `generation/helpers.py` turns retrieved documents into labeled, citable sources.
+- `generation/helpers.py` formats retrieved documents as model context.
 - `generation/pipeline.py` composes retrieval, context formatting, and generation.
-- `run_rag_pipeline.py` is the executable entry point for manual end-to-end tests.
+- `rag/` contains LangGraph state, routing schema, chains, prompts, and graph construction.
+- `run_rag_pipeline.py` composes dependencies and runs the graph.
 
-Edit `QUESTION` in `run_rag_pipeline.py`, then run:
+Set `query` and `history` in `input.json`, then run:
 
-```bash
+```powershell
 uv run run_rag_pipeline.py
 ```

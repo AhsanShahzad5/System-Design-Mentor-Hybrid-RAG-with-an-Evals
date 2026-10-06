@@ -7,6 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 PROJECT_ROOT = Path(__file__).resolve().parent
 BOOKS_DIRECTORY = PROJECT_ROOT / "books_data"
 PROCESSED_DOCUMENTS_DIRECTORY = PROJECT_ROOT / "processed_documents"
+BOOK_CATALOGUE_PATH = PROJECT_ROOT / "rag" / "data" / "book_catalogue.json"
+RAG_INPUT_PATH = PROJECT_ROOT / "input.json"
 
 
 class Settings(BaseSettings):
@@ -24,6 +26,8 @@ class Settings(BaseSettings):
     # Project paths
     books_directory: Path = BOOKS_DIRECTORY
     processed_documents_directory: Path = PROCESSED_DOCUMENTS_DIRECTORY
+    book_catalogue_path: Path = BOOK_CATALOGUE_PATH
+    rag_input_path: Path = RAG_INPUT_PATH
 
     # Pinecone
     pinecone_namespace: str = "books"

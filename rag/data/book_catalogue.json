@@ -1,0 +1,85 @@
+{
+  "books": [
+    {
+      "title": "AI Engineering",
+      "chapters": [
+        {"number": 1, "title": "Introduction to Building AI Applications with Foundation Models"},
+        {"number": 2, "title": "Understanding Foundation Models"},
+        {"number": 3, "title": "Evaluation Methodology"},
+        {"number": 4, "title": "Evaluate AI Systems"},
+        {"number": 5, "title": "Prompt Engineering"},
+        {"number": 6, "title": "RAG and Agents"},
+        {"number": 7, "title": "Finetuning"},
+        {"number": 8, "title": "Dataset Engineering"},
+        {"number": 9, "title": "Inference Optimization"},
+        {"number": 10, "title": "AI Engineering Architecture and User Feedback"}
+      ]
+    },
+    {
+      "title": "Designing Data-Intensive Applications",
+      "chapters": [
+        {"number": 1, "title": "Reliable, Scalable, and Maintainable Applications"},
+        {"number": 2, "title": "Data Models and Query Languages"},
+        {"number": 3, "title": "Storage and Retrieval"},
+        {"number": 4, "title": "Encoding and Evolution"},
+        {"number": 5, "title": "Replication"},
+        {"number": 6, "title": "Partitioning"},
+        {"number": 7, "title": "Transactions"},
+        {"number": 8, "title": "The Trouble with Distributed Systems"},
+        {"number": 9, "title": "Consistency and Consensus"},
+        {"number": 10, "title": "Batch Processing"},
+        {"number": 11, "title": "Stream Processing"},
+        {"number": 12, "title": "The Future of Data Systems"}
+      ]
+    },
+    {
+      "title": "Designing Machine Learning Systems",
+      "chapters": [
+        {"number": 1, "title": "Machine Learning Systems in Production"},
+        {"number": 2, "title": "Data Engineering Fundamentals"},
+        {"number": 3, "title": "Training Data"},
+        {"number": 4, "title": "Feature Engineering"},
+        {"number": 5, "title": "Model Development"},
+        {"number": 6, "title": "Model Deployment"},
+        {"number": 7, "title": "Why Machine Learning Systems Fail in Production"}
+      ]
+    },
+    {
+      "title": "Machine Learning System Design Interview",
+      "chapters": [
+        {"number": 1, "title": "Introduction and Overview"},
+        {"number": 2, "title": "Visual Search System"},
+        {"number": 3, "title": "Google Street View Blurring System"},
+        {"number": 4, "title": "YouTube Video Search"},
+        {"number": 5, "title": "Harmful Content Detection"},
+        {"number": 6, "title": "Video Recommendation System"},
+        {"number": 7, "title": "Event Recommendation System"},
+        {"number": 8, "title": "Ad Click Prediction on Social Platforms"},
+        {"number": 9, "title": "Similar Listings on Vacation Rental Platforms"},
+        {"number": 10, "title": "Personalized News Feed"},
+        {"number": 11, "title": "People You May Know"}
+      ]
+    },
+    {
+      "title": "System Design Interview: An Insider's Guide",
+      "chapters": [
+        {"number": 1, "title": "Scale From Zero to Millions of Users"},
+        {"number": 2, "title": "Back-of-the-Envelope Estimation"},
+        {"number": 3, "title": "A Framework for System Design Interviews"},
+        {"number": 4, "title": "Design a Rate Limiter"},
+        {"number": 5, "title": "Design Consistent Hashing"},
+        {"number": 6, "title": "Design a Key-Value Store"},
+        {"number": 7, "title": "Design a Unique ID Generator in Distributed Systems"},
+        {"number": 8, "title": "Design a URL Shortener"},
+        {"number": 9, "title": "Design a Web Crawler"},
+        {"number": 10, "title": "Design a Notification System"},
+        {"number": 11, "title": "Design a News Feed System"},
+        {"number": 12, "title": "Design a Chat System"},
+        {"number": 13, "title": "Design a Search Autocomplete System"},
+        {"number": 14, "title": "Design YouTube"},
+        {"number": 15, "title": "Design Google Drive"},
+        {"number": 16, "title": "The Learning Continues"}
+      ]
+    }
+  ]
+}
