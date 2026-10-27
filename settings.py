@@ -1,10 +1,15 @@
 from functools import lru_cache
 from pathlib import Path
 
+from dotenv import load_dotenv
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parent
+
+# Export .env to os.environ so libraries that read it directly (LangSmith
+# tracing, OpenAI/Pinecone SDK defaults) work from every entry point.
+load_dotenv(PROJECT_ROOT / ".env")
 BOOKS_DIRECTORY = PROJECT_ROOT / "books_data"
 PROCESSED_DOCUMENTS_DIRECTORY = PROJECT_ROOT / "processed_documents"
 BOOK_CATALOGUE_PATH = PROJECT_ROOT / "rag" / "data" / "book_catalogue.json"

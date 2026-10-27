@@ -6,6 +6,7 @@ from pathlib import Path
 class BookConfig:
     book_id: str
     pdf_path: Path
+    title: str = ""
     section_title_overrides: dict[tuple[int, str], str] = field(
         default_factory=dict
     )

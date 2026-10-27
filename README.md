@@ -151,7 +151,7 @@ FINAL_TOP_K = 5
 ```
 
 The reusable components live under `retrieval/`, while
-`run_retrieval_pipeline.py` constructs the dependencies and runs a query.
+`app.build_retriever()` constructs the dependencies; `run_retrieval_pipeline.py` runs a query.
 
 ---
 # LangGraph RAG workflow
@@ -183,13 +183,25 @@ five book titles and their ordered chapter numbers and names. Knowledge
 questions reuse the existing hybrid retrieval and grounded generation
 pipeline. GPT-5.6 Luna is used with low verbosity.
 
-Generation code is separated by responsibility:
+The graph nodes are `analyze_query → (answer_catalogue | retrieve → generate)`.
+Retrieval and generation are separate nodes so each can be evaluated alone.
+
+Code is separated by responsibility:
 
 - `generation/prompts.py` contains the mentor and grounding instructions.
-- `generation/helpers.py` formats retrieved documents as model context.
-- `generation/pipeline.py` composes retrieval, context formatting, and generation.
-- `rag/` contains LangGraph state, routing schema, chains, prompts, and graph construction.
-- `run_rag_pipeline.py` composes dependencies and runs the graph.
+- `generation/helpers.py` formats context with readable source labels and reads token usage.
+- `generation/generator.py` generates from a query and given context (`generate()` and `stream()`); it never retrieves.
+- `rag/` contains LangGraph state, nodes, routing schema, chains, prompts, and graph construction.
+- `app.py` builds every client and component once (`build_app()`); run scripts and evals share it.
+- `run_rag_pipeline.py` reads `input.json` and runs the app.
+
+`RAGGraph.invoke()` / `BookMentorApp.invoke()` return:
+
+```text
+query, final_query, route, answer,
+documents (LangChain Documents), context (their texts),
+usage (token usage per model call: query_analysis, generation / catalogue_answer)
+```
 
 Set `query` and `history` in `input.json`, then run:
 

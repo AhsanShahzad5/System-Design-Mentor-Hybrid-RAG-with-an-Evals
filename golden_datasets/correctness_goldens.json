@@ -1,0 +1,212 @@
+[
+  {
+    "id": "c001",
+    "question": "Why is developing an ML system described as an iterative process rather than a linear one?",
+    "ideal_answer": "Building an ML system is a never-ending cycle, not a linear sequence of collect data, train, deploy, done. In practice you loop back repeatedly: error analysis reveals wrong labels, so you relabel; class imbalance means you collect more data; the model degrades on recent data, so you collect fresher data; and after deployment business feedback can even change the metric being optimized (for example from impressions to click-through rate), sending you back to step one. Once in production, the system must be continually monitored and updated.",
+    "type": "single_book",
+    "books": ["designing-ml-systems-chip-huyen"]
+  },
+  {
+    "id": "c002",
+    "question": "What should I consider when choosing a data serialization format for ML data, and how do common formats compare?",
+    "ideal_answer": "Data serialization converts a data structure into a format that can be stored or transmitted and reconstructed later. When choosing a format, consider human readability, access patterns and whether it is text or binary, which affects file size. JSON and CSV are text and human-readable and are used everywhere. Parquet (Hadoop, Amazon Redshift) and Avro are binary and not human-readable. Protobuf is binary and used at Google and in TensorFlow (TFRecord), and Pickle is binary and used for Python/PyTorch serialization.",
+    "type": "single_book",
+    "books": ["designing-ml-systems-chip-huyen"]
+  },
+  {
+    "id": "c003",
+    "question": "What challenges arise when training on data that doesn't fit into memory, and what is gradient checkpointing?",
+    "ideal_answer": "When data doesn't fit into memory you need out-of-memory, parallel algorithms for preprocessing (such as zero-centering, normalizing and whitening), shuffling and batching. If individual samples are large, you may only fit small batches, which makes gradient-descent optimization unstable. Gradient checkpointing trades extra computation for less memory, letting you fit larger models (more than 10x larger for feed-forward models at about 20% more computation time) or more samples per batch.",
+    "type": "single_book",
+    "books": ["designing-ml-systems-chip-huyen"]
+  },
+  {
+    "id": "c004",
+    "question": "What should happen during the design deep-dive step of a system design interview?",
+    "ideal_answer": "By this step you should have agreed on goals and scope, sketched a high-level design and got feedback on it. You then work with the interviewer to identify and prioritize components to dig into. The focus varies: some interviewers stay high level, senior interviews may focus on performance, bottlenecks and resource estimates, and often you dive into specific components, such as the hash function for a URL shortener or latency and online status for a chat system. Manage time carefully and avoid unnecessary detail that doesn't demonstrate your ability to design scalable systems.",
+    "type": "single_book",
+    "books": ["system-design-interview-alex-xu"]
+  },
+  {
+    "id": "c005",
+    "question": "What does the initial high-level design of a notification system look like and what are its problems?",
+    "ideal_answer": "Services 1 to N (microservices, cron jobs or other systems) trigger notification events. A single notification server provides APIs to those services and builds payloads for third-party delivery services (such as APNs, FCM, SMS and email providers), which must be easy to plug in or out because some are unavailable in certain markets (for example FCM in China). Users receive notifications on iOS, Android, SMS or email. The problems are a single point of failure, difficulty scaling components independently, and a performance bottleneck because processing and sending is resource intensive.",
+    "type": "single_book",
+    "books": ["system-design-interview-alex-xu"]
+  },
+  {
+    "id": "c006",
+    "question": "What requirements are agreed on for the chat system design?",
+    "ideal_answer": "The design targets an app like Facebook Messenger supporting both one-on-one and group chat, on mobile and web, at 50 million daily active users. Groups are limited to 100 members. Features are one-on-one chat with low delivery latency, small group chat, online presence, multiple device support and push notifications. Only text messages are supported, under 100,000 characters, end-to-end encryption is not required initially, and chat history is stored forever.",
+    "type": "single_book",
+    "books": ["system-design-interview-alex-xu"]
+  },
+  {
+    "id": "c007",
+    "question": "What is Cypher and how does it express graph patterns?",
+    "ideal_answer": "Cypher is a declarative query language for property graphs, created for the Neo4j graph database. Vertices get symbolic names and properties, and edges are written with arrow notation, such as (Idaho) -[:WITHIN]-> (USA), which creates a WITHIN edge from Idaho to USA. The same arrow notation is used in MATCH clauses to find patterns, for example finding people with a BORN_IN edge to a location within the US and a LIVING_IN edge to a location within Europe.",
+    "type": "single_book",
+    "books": ["designing-data-intensive-applications-martin-kleppmann"]
+  },
+  {
+    "id": "c008",
+    "question": "How do message brokers support dataflow between processes?",
+    "ideal_answer": "A process sends a message to a named queue or topic, and the broker delivers it to one or more consumers or subscribers; there can be many producers and consumers on a topic. Topics are one-way, but consumers can publish to other topics or to a reply queue to get request/response behavior. Brokers don't enforce a data model, since messages are just bytes with metadata, so backward- and forward-compatible encodings let publishers and consumers change and deploy independently. Consumers that republish messages should preserve unknown fields. Examples include RabbitMQ, ActiveMQ, HornetQ, NATS and Apache Kafka.",
+    "type": "single_book",
+    "books": ["designing-data-intensive-applications-martin-kleppmann"]
+  },
+  {
+    "id": "c009",
+    "question": "Why don't OLTP applications run interactive multi-statement transactions that wait for user input, and what does this mean for single-threaded serial execution?",
+    "ideal_answer": "Humans are slow to respond, so a transaction waiting on user input would force the database to support huge numbers of mostly idle concurrent transactions. OLTP applications therefore keep transactions short, typically committing within a single HTTP request. Even so, interactive client/server transactions spend much of their time on network round trips, so a database processing one transaction at a time would have dreadful throughput. Systems with single-threaded serial execution therefore don't allow interactive multi-statement transactions; the application must submit the entire transaction code ahead of time as a stored procedure.",
+    "type": "single_book",
+    "books": ["designing-data-intensive-applications-martin-kleppmann"]
+  },
+  {
+    "id": "c010",
+    "question": "How can ZooKeeper help with allocating work to nodes?",
+    "ideal_answer": "ZooKeeper (like Chubby) can choose a leader among several instances of a service and fail over when it dies, and can assign partitions of a resource to nodes and rebalance them as nodes join, leave or fail, using atomic operations, ephemeral nodes and notifications. It runs on a fixed small number of nodes (usually three or five) that perform majority votes while serving many clients, effectively outsourcing consensus, operation ordering and failure detection. It is meant for slow-changing coordination data, not rapidly changing application state. Doing this correctly is still hard, even with libraries like Apache Curator.",
+    "type": "single_book",
+    "books": ["designing-data-intensive-applications-martin-kleppmann"]
+  },
+  {
+    "id": "c011",
+    "question": "What is the problem statement for the Google Street View blurring system?",
+    "ideal_answer": "The business objective is to protect user privacy. The system automatically detects and blurs human faces and license plates in Street View images before they are shown, and users can report images that are not correctly blurred. There is a training dataset of 1 million images with manually annotated faces and license plates. Latency is not a major concern because images can be processed offline, and fairness and bias are set aside for simplicity.",
+    "type": "single_book",
+    "books": ["machine-learning-system-design-interview-aminian-xu"]
+  },
+  {
+    "id": "c012",
+    "question": "What requirements are clarified for the harmful content detection system?",
+    "ideal_answer": "The focus is on detecting harmful content, not bad actors. Posts can contain text, images, video or any combination, in many languages, using a pretrained multilingual model for text. Categories include violence, nudity and hate speech, with misinformation left out for simplicity. The platform receives over 500 million posts a day, and human annotators can label only about 10,000 posts daily. Users can report harmful posts, the system should explain why a post was removed, and latency requirements (real-time versus batch prediction) are discussed as a key design decision.",
+    "type": "single_book",
+    "books": ["machine-learning-system-design-interview-aminian-xu"]
+  },
+  {
+    "id": "c013",
+    "question": "What are the drawbacks of logistic regression, decision trees and GBDT for event recommendation?",
+    "ideal_answer": "Logistic regression can't solve non-linear problems because it combines features linearly, and it struggles with multicollinearity. Decision trees produce axis-parallel decision boundaries that may be suboptimal and overfit badly, since small changes in data can produce very different trees; bagging and boosting are used to reduce this sensitivity. GBDT has many hyperparameters to tune, works poorly on unstructured data such as images, video and audio, and is unsuitable for continual learning from streaming data. That last point is a major drawback for event recommendation, where new users, events and interactions arrive constantly.",
+    "type": "single_book",
+    "books": ["machine-learning-system-design-interview-aminian-xu"]
+  },
+  {
+    "id": "c014",
+    "question": "How could the video search system be improved beyond the simplified design?",
+    "ideal_answer": "Improvements include a multi-stage design (candidate generation followed by ranking), more video features such as length and popularity, labeling data from user interactions like clicks and likes to enable continuous training, and an ML model that finds titles and tags semantically similar to the query, combined with Elasticsearch. Additional talking points include query understanding (spelling correction, query category identification, entity recognition), multi-modal processing of speech and audio, supporting other languages, removing near-duplicate videos, handling head, torso and tail queries, and accounting for popularity and freshness.",
+    "type": "single_book",
+    "books": ["machine-learning-system-design-interview-aminian-xu"]
+  },
+  {
+    "id": "c015",
+    "question": "Why do general-purpose foundation models struggle with domain-specific tasks?",
+    "ideal_answer": "General-purpose models such as Gemini, GPTs and Llama perform well across many domains largely because those domains appear in their training data. They are unlikely to perform well on domain-specific tasks they never saw during training, especially when the data is specialized, expensive or private and therefore absent from public internet data. Examples are drug discovery, which involves protein, DNA and RNA data, and cancer screening, which involves hard-to-obtain X-ray and fMRI scans.",
+    "type": "single_book",
+    "books": ["ai-engineering-chip-huyen"]
+  },
+  {
+    "id": "c016",
+    "question": "What is an AI agent, and how do its environment and tools relate?",
+    "ideal_answer": "An agent is anything that can perceive its environment and act upon it, so it is characterized by the environment it operates in and the set of actions it can perform. The environment depends on the use case (a game, the internet, a kitchen, a road system), and the set of actions is augmented by tools. ChatGPT is an agent that can search the web, run code and generate images, and RAG systems are agents whose tools are retrievers and SQL executors. Environment and tools are interdependent: the environment determines which tools are possible, and the tool inventory restricts which environments the agent can operate in.",
+    "type": "single_book",
+    "books": ["ai-engineering-chip-huyen"]
+  },
+  {
+    "id": "c017",
+    "question": "In what ways can AI be used to synthesize training data?",
+    "ideal_answer": "AI can simulate outcomes, such as simulating API responses instead of making real calls (StableToolBench). It can simulate humans through self-play, as OpenAI did for its Dota 2 bot and DeepMind did for AlphaGo, or by having models role-play customers and support agents. It can paraphrase existing data to augment it (MetaMath rewrote MATH and GSM-8K examples into almost 400,000 examples), and it can translate data from high-resource languages into low-resource languages.",
+    "type": "single_book",
+    "books": ["ai-engineering-chip-huyen"]
+  },
+  {
+    "id": "c018",
+    "question": "What is leniency bias in user feedback, and how can you reduce it?",
+    "ideal_answer": "Leniency bias is the tendency to rate things more positively than warranted, to avoid conflict or extra effort, for example avoiding a negative rating because it triggers follow-up questions. Uber's average driver rating in 2015 was 4.8, with scores below 4.6 risking deactivation. You should inspect the distribution of ratings to detect it, and you can reduce it by removing the negative connotation of low ratings, such as using descriptive options ('Pretty good', 'Could've been better') instead of numeric stars.",
+    "type": "single_book",
+    "books": ["ai-engineering-chip-huyen"]
+  },
+  {
+    "id": "c019",
+    "question": "Compare how System Design Interview and Designing Data-Intensive Applications approach distributing data across nodes: virtual nodes on a hash ring versus a fixed number of partitions.",
+    "ideal_answer": "System Design Interview uses consistent hashing with virtual nodes: each server appears as many virtual nodes on a hash ring, a key belongs to the first virtual node clockwise from it, and more virtual nodes make the distribution more balanced at the cost of more metadata. Designing Data-Intensive Applications describes creating many more partitions than nodes up front and moving whole partitions between nodes during rebalancing, so the key-to-partition mapping never changes, only the partition-to-node assignment. Both decouple data placement from the physical node count so that adding or removing a node moves only a fraction of the data; virtual nodes do it through the ring, fixed partitions through a static partition count chosen high enough for future growth.",
+    "type": "cross_book",
+    "books": ["system-design-interview-alex-xu", "designing-data-intensive-applications-martin-kleppmann"]
+  },
+  {
+    "id": "c020",
+    "question": "How do Designing Machine Learning Systems and AI Engineering each describe quantization?",
+    "ideal_answer": "Designing Machine Learning Systems presents quantization as the most general model compression method: using fewer bits per parameter (16-bit half precision, 8-bit integers, even 1-bit weights) shrinks memory and speeds up computation and inference, at the cost of rounding errors and possible under- or overflow; it can be applied during training (quantization-aware training) or after training. AI Engineering applies quantization to finetuning through QLoRA, which stores model weights in 4-bit NF4 and dequantizes them to BF16 for computation, with paged optimizers, letting a 65B model be finetuned on a single 48 GB GPU. Both treat lower precision as a way to trade a little accuracy for large memory savings.",
+    "type": "cross_book",
+    "books": ["designing-ml-systems-chip-huyen", "ai-engineering-chip-huyen"]
+  },
+  {
+    "id": "c021",
+    "question": "How does the CAP theorem presentation in System Design Interview compare with Designing Data-Intensive Applications' view of CAP?",
+    "ideal_answer": "System Design Interview presents CAP as choosing at most two of consistency, availability and partition tolerance, classifies stores as CP, AP or CA, and notes that CA can't exist in practice because partitions are unavoidable. Designing Data-Intensive Applications is more critical: since network partitions are a fault that happens whether you like it or not, the 'pick 2 of 3' framing is misleading. The real choice is between consistency (linearizability) and availability when a partition occurs, and the theorem's narrow definitions, covering one consistency model and one kind of fault, make it of limited practical use for designing systems.",
+    "type": "cross_book",
+    "books": ["system-design-interview-alex-xu", "designing-data-intensive-applications-martin-kleppmann"]
+  },
+  {
+    "id": "c022",
+    "question": "How do message queues appear in the notification system design compared with DDIA's description of message brokers?",
+    "ideal_answer": "Designing Data-Intensive Applications describes message brokers generally: producers send messages to a named queue or topic, the broker delivers them to consumers, and producers and consumers are decoupled and can evolve independently if encodings are compatible. System Design Interview applies this to fix the notification system's single server: notification servers put events into separate queues per notification type (iOS, Android, SMS, email), and workers pull from the queues and call third-party services. This decouples components so they can scale independently, removes the single point of failure and buffers load spikes.",
+    "type": "cross_book",
+    "books": ["designing-data-intensive-applications-martin-kleppmann", "system-design-interview-alex-xu"]
+  },
+  {
+    "id": "c023",
+    "question": "How do the books distinguish transactional (OLTP) from analytical processing?",
+    "ideal_answer": "OLTP handles user-facing transactions such as orders or posts, which are inserted as generated, occasionally updated or deleted, and need low latency and high availability. They usually touch a small number of records looked up by key, and transactional databases typically provide ACID guarantees. Analytical processing (OLAP) answers questions over large amounts of data, scanning many records and computing aggregates such as counts, sums and averages for business intelligence. It is usually done in a separate data warehouse, often with column-oriented storage and materialized aggregates such as data cubes, so analytics doesn't slow down the transactional system.",
+    "type": "cross_book",
+    "books": ["designing-ml-systems-chip-huyen", "designing-data-intensive-applications-martin-kleppmann"]
+  },
+  {
+    "id": "c024",
+    "question": "How do offline evaluation metrics for ranking compare with online engagement metrics in ML system design?",
+    "ideal_answer": "Offline metrics are computed on held-out data during development to compare models: ranking and retrieval systems use MRR, recall@k, precision@k, mAP and nDCG, and click prediction uses cross-entropy and normalized cross-entropy against a background-CTR baseline. Online metrics measure real user impact after deployment, such as click-through rate, reaction rates (likes, shares, hides), total time spent and survey-based satisfaction. Both are needed: a model can look good offline yet fail to improve engagement online, and some online metrics such as CTR can be gamed by clickbait.",
+    "type": "cross_chapter",
+    "books": ["machine-learning-system-design-interview-aminian-xu"]
+  },
+  {
+    "id": "c025",
+    "question": "How do I configure a Kubernetes Horizontal Pod Autoscaler to scale on custom Prometheus metrics?",
+    "ideal_answer": "The indexed books don't cover Kubernetes Horizontal Pod Autoscaler configuration or Prometheus custom metrics, so this can't be answered from the book context. The correct response is to say the books don't contain this information rather than inventing configuration steps.",
+    "type": "not_covered",
+    "books": []
+  },
+  {
+    "id": "c026",
+    "question": "How does Apache Iceberg's hidden partitioning work?",
+    "ideal_answer": "Apache Iceberg is not covered in the indexed books, so the correct response is to say the available book context doesn't explain Iceberg's hidden partitioning rather than describing it from outside knowledge.",
+    "type": "not_covered",
+    "books": []
+  },
+  {
+    "id": "c027",
+    "question": "What is the current price per million tokens for GPT-5 models?",
+    "ideal_answer": "The books don't contain current model pricing, and prices change frequently, so the correct response is to say this information isn't in the book context.",
+    "type": "not_covered",
+    "books": []
+  },
+  {
+    "id": "c028",
+    "question": "Explain how React's virtual DOM reconciliation works.",
+    "ideal_answer": "React's virtual DOM is a frontend framework topic that isn't covered in the indexed system design and AI engineering books, so the correct response is to say the book context doesn't cover it.",
+    "type": "not_covered",
+    "books": []
+  },
+  {
+    "id": "c029",
+    "question": "What is chapter 7 of Machine Learning System Design Interview about?",
+    "ideal_answer": "Chapter 7 of Machine Learning System Design Interview is 'Event Recommendation System'.",
+    "type": "catalogue",
+    "books": ["machine-learning-system-design-interview-aminian-xu"]
+  },
+  {
+    "id": "c030",
+    "question": "How many chapters does System Design Interview: An Insider's Guide have, and what is the last one?",
+    "ideal_answer": "It has 16 chapters, and the last one is chapter 16, 'The Learning Continues'.",
+    "type": "catalogue",
+    "books": ["system-design-interview-alex-xu"]
+  }
+]

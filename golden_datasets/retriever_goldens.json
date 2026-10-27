@@ -1,0 +1,212 @@
+[
+  {
+    "id": "r001",
+    "query": "Why is interpretability a requirement for ML systems in industry rather than an optional extra?",
+    "ideal_answer": "Interpretability matters for two groups. Users, including business leaders and end users, need to understand why a decision was made so they can trust the model and detect potential biases. Developers need it to debug and improve the model. Even so, research is mostly evaluated on model performance alone, so researchers have little incentive to work on it, and as of 2019 only 19% of large companies were working to improve the explainability of their algorithms.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "designing-ml-systems-chip-huyen", "chapter_number": 1, "section_title": "Interpretability", "pages": [38, 39]}
+  },
+  {
+    "id": "r002",
+    "query": "What is OLTP and what do the ACID properties guarantee?",
+    "ideal_answer": "Online transaction processing (OLTP) handles transactions such as tweets, ride orders or video views: they are inserted as they are generated, occasionally updated and deleted when no longer needed. Because they involve users, they need low latency and high availability. ACID stands for atomicity (all steps of a transaction succeed or fail as a group), consistency (every transaction follows predefined rules, such as being made by a valid user), isolation (concurrent transactions behave as if they ran in isolation, so two users can't book the same driver) and durability (a committed transaction stays committed even after a system failure).",
+    "question_type": "factual",
+    "evidence": {"book_id": "designing-ml-systems-chip-huyen", "chapter_number": 2, "section_title": "Transactional and Analytical Processing", "pages": [84, 85, 86]}
+  },
+  {
+    "id": "r003",
+    "query": "How does reservoir sampling work on a stream of incoming data?",
+    "ideal_answer": "Reservoir sampling samples k items from a stream whose total size is unknown and can't fit in memory, such that every item has an equal probability of being selected and the algorithm can be stopped at any time with correct probabilities. Put the first k elements into the reservoir. For each incoming nth element, generate a random number i with 1 ≤ i ≤ n. If 1 ≤ i ≤ k, replace the ith element of the reservoir with the nth element; otherwise do nothing. Each incoming element has probability k/n of being in the reservoir, so all samples have an equal chance of being selected.",
+    "question_type": "procedural",
+    "evidence": {"book_id": "designing-ml-systems-chip-huyen", "chapter_number": 3, "section_title": "Reservoir Sampling", "pages": [102, 103, 104]}
+  },
+  {
+    "id": "r004",
+    "query": "What is semi-supervision and how does self-training work?",
+    "ideal_answer": "Semi-supervision uses structural assumptions to generate new labels from a small initial set of labels; unlike weak supervision it needs that initial labeled set. In self-training you train a model on the existing labeled data, use it to predict labels for unlabeled samples, add the high-probability predictions to the training set, and train a new model on the expanded set, repeating until performance is satisfactory. Other methods assume samples with similar characteristics share labels (for example hashtags appearing in the same profile), or that small perturbations to a sample shouldn't change its label.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "designing-ml-systems-chip-huyen", "chapter_number": 3, "section_title": "Semi-supervision", "pages": [115, 116]}
+  },
+  {
+    "id": "r005",
+    "query": "If deep learning learns features automatically, why do we still need feature engineering?",
+    "ideal_answer": "Deep learning promises that features don't have to be handcrafted, and many features can be learned automatically, but we are still far from automating all features. Also, most ML applications in production are not deep learning. Before deep learning, text models required manual processing such as lemmatization, expanding contractions, removing punctuation, lowercasing and building n-gram features mapped to a vocabulary of indices, and many production systems still rely on handcrafted features like these.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "designing-ml-systems-chip-huyen", "chapter_number": 4, "section_title": "Learned Features vs. Engineered Features", "pages": [143, 144, 145, 146, 147]}
+  },
+  {
+    "id": "r006",
+    "query": "How does quantization compress a model and what are its downsides?",
+    "ideal_answer": "Quantization reduces model size by using fewer bits to represent parameters, for example 16-bit half precision instead of 32-bit floats, 8-bit integers (fixed point), or even 1-bit weights. A 100M-parameter model takes 400MB at 32 bits and half that at 16 bits. It also speeds up computation, allowing larger batch sizes and lower training time and inference latency. The downsides are a smaller representable range of values: rounding introduces errors that can cause big performance changes, and values risk under- or overflowing to 0. Quantization can happen during training (quantization-aware training) or after training.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "designing-ml-systems-chip-huyen", "chapter_number": 6, "section_title": "Quantization", "pages": [288, 289, 290]}
+  },
+  {
+    "id": "r007",
+    "query": "What should you consider before adding a cache to a system?",
+    "ideal_answer": "Use a cache when data is read frequently but modified infrequently, and don't rely on it for persistence because cached data lives in volatile memory. Set an expiration policy that is neither too short (frequent reloads from the database) nor too long (stale data). Keep the data store and cache consistent, which is hard across regions. Avoid a single point of failure by using multiple cache servers across data centers and overprovisioning memory. Choose an eviction policy for when the cache is full; LRU is the most popular, with LFU or FIFO for other use cases.",
+    "question_type": "factual",
+    "evidence": {"book_id": "system-design-interview-alex-xu", "chapter_number": 1, "section_title": "Considerations for using cache", "pages": [15, 16]}
+  },
+  {
+    "id": "r008",
+    "query": "How does the sliding window log rate limiting algorithm work and what problem does it fix?",
+    "ideal_answer": "It fixes the fixed window counter's problem of letting extra requests through at the edges of a window. The algorithm keeps request timestamps, usually in a cache such as Redis sorted sets. When a request arrives, timestamps older than the start of the current window are removed, the new request's timestamp is added to the log, and the request is accepted only if the log size is at or below the allowed count; otherwise it is rejected, even though its timestamp stays in the log.",
+    "question_type": "procedural",
+    "evidence": {"book_id": "system-design-interview-alex-xu", "chapter_number": 4, "section_title": "Sliding window log algorithm", "pages": [60, 61]}
+  },
+  {
+    "id": "r009",
+    "query": "What are virtual nodes in consistent hashing and why are they used?",
+    "ideal_answer": "Each real server is represented by multiple virtual nodes on the hash ring, so each server is responsible for multiple partitions. To find a key's server you go clockwise from the key's position to the first virtual node. More virtual nodes make the key distribution more balanced because the standard deviation shrinks: with 100 to 200 virtual nodes it is about 10% to 5% of the mean. The tradeoff is that more space is needed to store virtual-node data, so the number can be tuned to the system's requirements.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "system-design-interview-alex-xu", "chapter_number": 5, "section_title": "Virtual nodes", "pages": [80, 81, 82]}
+  },
+  {
+    "id": "r010",
+    "query": "What does the CAP theorem say and why can't a CA system exist in practice?",
+    "ideal_answer": "The CAP theorem states a distributed system cannot simultaneously provide more than two of consistency (all clients see the same data at the same time), availability (every request gets a response even if some nodes are down) and partition tolerance (the system keeps operating despite communication breaks between nodes). Key-value stores are classified as CP, AP or CA. Because network failure is unavoidable, a distributed system must tolerate partitions, so a CA system cannot exist in real-world applications.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "system-design-interview-alex-xu", "chapter_number": 6, "section_title": "CAP theorem", "pages": [90, 91]}
+  },
+  {
+    "id": "r011",
+    "query": "Walk through the URL shortening flow using base 62 conversion.",
+    "ideal_answer": "The long URL is the input. The system checks whether it is already in the database; if so it returns the existing short URL. Otherwise a distributed unique ID generator creates a new unique ID (primary key), the ID is converted to a short URL with base 62 conversion, and a new row with the ID, short URL and long URL is saved. For example, ID 2009215674938 converts to \"zn9edcu\".",
+    "question_type": "procedural",
+    "evidence": {"book_id": "system-design-interview-alex-xu", "chapter_number": 8, "section_title": "URL shortening deep dive", "pages": [127, 128, 129]}
+  },
+  {
+    "id": "r012",
+    "query": "Compare fanout on write and fanout on read for a news feed. Which approach is recommended?",
+    "ideal_answer": "Fanout on write (push) pre-computes the feed at write time, so feeds are real-time and fast to fetch, but it is slow for users with many friends (the hotkey problem) and wastes resources on inactive users. Fanout on read (pull) builds the feed on demand at read time, which suits inactive users and avoids the hotkey problem, but fetching is slow. The recommended hybrid uses push for most users and lets followers pull content from celebrities or users with many followers; consistent hashing also helps spread requests and mitigate hotkeys.",
+    "question_type": "comparison",
+    "evidence": {"book_id": "system-design-interview-alex-xu", "chapter_number": 11, "section_title": "Fanout service", "pages": [172, 173]}
+  },
+  {
+    "id": "r013",
+    "query": "How common are hardware faults in large datacenters and how are systems made tolerant to them?",
+    "ideal_answer": "Hardware faults happen all the time at scale: disks have a mean time to failure of about 10 to 50 years, so a cluster with 10,000 disks should expect about one disk to die per day. The first response is hardware redundancy such as RAID, dual power supplies, hot-swappable CPUs and backup generators. As data volumes grow and cloud instances can disappear without warning, systems are moving toward tolerating the loss of entire machines using software fault-tolerance techniques in preference to or in addition to hardware redundancy.",
+    "question_type": "factual",
+    "evidence": {"book_id": "designing-data-intensive-applications-martin-kleppmann", "chapter_number": 1, "section_title": "Hardware Faults", "pages": [29, 30]}
+  },
+  {
+    "id": "r014",
+    "query": "What is a materialized view, and what is a data cube?",
+    "ideal_answer": "A materialized view is an actual copy of a query's results written to disk, unlike a virtual view, which is just a shortcut the engine expands into the underlying query on the fly. It caches commonly used aggregates such as COUNT or SUM, but it must be updated when the underlying data changes, which makes writes more expensive. That is why it suits read-heavy data warehouses more than OLTP databases. A data cube (OLAP cube) is a special case: a grid of aggregates grouped by different dimensions, such as date and product.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "designing-data-intensive-applications-martin-kleppmann", "chapter_number": 3, "section_title": "Aggregation: Data Cubes and Materialized Views", "pages": [123, 124, 125]}
+  },
+  {
+    "id": "r015",
+    "query": "When are two operations considered concurrent, according to the happens-before relationship?",
+    "ideal_answer": "Operation A happens before B if B knows about A, depends on it or builds upon it. Two operations are concurrent if neither happens before the other, meaning neither knows about the other; physical timing alone doesn't decide it. So for any two operations, either A happened before B, B happened before A, or they are concurrent. If one happened before the other, the later one can overwrite the earlier, but concurrent writes are a conflict that must be resolved.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "designing-data-intensive-applications-martin-kleppmann", "chapter_number": 5, "section_title": "The “happens-before” relationship and concurrency", "pages": [208, 209]}
+  },
+  {
+    "id": "r016",
+    "query": "How does rebalancing with a fixed number of partitions work?",
+    "ideal_answer": "You create many more partitions than nodes from the outset (for example 1,000 partitions for 10 nodes) and assign several to each node. When a node is added, it steals a few partitions from every existing node; when one is removed, the reverse happens. Only whole partitions move: the number of partitions and the key-to-partition assignment never change, only the partition-to-node assignment. Riak, Elasticsearch, Couchbase and Voldemort use this. The partition count is the maximum number of nodes, so it must be chosen high enough for growth but not so high that per-partition overhead dominates.",
+    "question_type": "procedural",
+    "evidence": {"book_id": "designing-data-intensive-applications-martin-kleppmann", "chapter_number": 6, "section_title": "Fixed number of partitions", "pages": [232, 233]}
+  },
+  {
+    "id": "r017",
+    "query": "Why should a clock reading be treated as a confidence interval, and how does Google's TrueTime handle this?",
+    "ideal_answer": "Fine-grained clock resolution doesn't mean accuracy: quartz drift can be several milliseconds even with frequent NTP syncs, and over the public internet errors are tens of milliseconds and can spike above 100 ms. So a reading is really a range of times within a confidence interval, based on quartz drift since the last sync, the NTP server's uncertainty and network round-trip time. Most APIs don't expose this uncertainty, but Google's TrueTime API in Spanner returns [earliest, latest], the earliest and latest possible timestamps.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "designing-data-intensive-applications-martin-kleppmann", "chapter_number": 8, "section_title": "Clock readings have a confidence interval", "pages": [315, 316]}
+  },
+  {
+    "id": "r018",
+    "query": "Why does treating batch job inputs as immutable make MapReduce outputs easier to maintain?",
+    "ideal_answer": "Following the Unix philosophy, a batch job reads immutable input and fully replaces its previous output without side effects. If buggy code produces wrong output, you can roll back the code and rerun the job, or switch back to the old output, which databases with read-write transactions can't offer (human fault tolerance). This ease of rollback lets features be developed faster (minimizing irreversibility). Failed map or reduce tasks can be safely retried automatically because inputs are immutable and outputs of failed tasks are discarded, and the same input files can feed many different jobs.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "designing-data-intensive-applications-martin-kleppmann", "chapter_number": 10, "section_title": "Philosophy of batch process outputs", "pages": [435, 436]}
+  },
+  {
+    "id": "r019",
+    "query": "What categories of clarifying questions should you ask at the start of an ML system design interview?",
+    "ideal_answer": "Ask about the business objective (for example more bookings or more revenue), the features the system must support (such as likes and dislikes that can label training data), the data (sources, size, whether it is labeled), constraints (computing power, cloud versus on-device, whether the model should improve automatically), the scale of the system (number of users and items and their growth), and performance (prediction speed, real-time needs, accuracy versus latency). Privacy and ethics can also matter, and the agreed requirements should be written down.",
+    "question_type": "factual",
+    "evidence": {"book_id": "machine-learning-system-design-interview-aminian-xu", "chapter_number": 1, "section_title": "Clarifying Requirements", "pages": [6, 7]}
+  },
+  {
+    "id": "r020",
+    "query": "Which offline metrics are used to evaluate a visual search system, and what is the shortcoming of MRR?",
+    "ideal_answer": "Search, information retrieval and recommendation systems share offline metrics: mean reciprocal rank (MRR), recall@k, precision@k, mean average precision (mAP) and normalized discounted cumulative gain (nDCG). MRR averages the reciprocal rank of the first relevant item in each output list. Its shortcoming is that it only considers the first relevant item and ignores the others, so it doesn't measure the precision or ranking quality of the whole list; two models with 3 and 1 relevant items can have the same MRR. The book therefore chooses not to use it.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "machine-learning-system-design-interview-aminian-xu", "chapter_number": 2, "section_title": "Offline metrics", "pages": [45, 46, 47]}
+  },
+  {
+    "id": "r021",
+    "query": "What ML objective is chosen for the video recommendation system, and why not maximize clicks or completed videos?",
+    "ideal_answer": "Maximizing clicks can recommend clickbait whose content is boring or misleading, reducing satisfaction over time. Maximizing completed videos biases toward short videos. Maximizing total watch time is another option. The chosen objective is to maximize the number of relevant videos, where relevance is defined by rules on implicit and explicit reactions (for example a like or watching at least half the video), because it gives more control over which signals are used and avoids the other options' shortcomings.",
+    "question_type": "comparison",
+    "evidence": {"book_id": "machine-learning-system-design-interview-aminian-xu", "chapter_number": 6, "section_title": "Defining the ML objective", "pages": [120, 121]}
+  },
+  {
+    "id": "r022",
+    "query": "What are cross-entropy and normalized cross-entropy for evaluating ad click prediction?",
+    "ideal_answer": "Cross-entropy (CE) measures how close predicted probabilities are to the ground-truth labels; it is zero for an ideal system and lower is better, and it is also a standard classification loss. Normalized cross-entropy (NCE) is the ratio of the model's CE to the CE of the background CTR, the average CTR in the training data. It compares the model to a baseline that always predicts the background CTR: NCE below 1 means the model beats the baseline, and NCE of 1 or more means it doesn't (for example, NCE of 0.324 shows the model outperforms a baseline predicting 0.6).",
+    "question_type": "factual",
+    "evidence": {"book_id": "machine-learning-system-design-interview-aminian-xu", "chapter_number": 8, "section_title": "Offline metrics", "pages": [191, 192, 193]}
+  },
+  {
+    "id": "r023",
+    "query": "How are learned listing embeddings evaluated offline in the similar listings system?",
+    "ideal_answer": "The metric is the average rank of the eventually booked listing. For each search session, the model computes similarities between the first clicked listing and the other listings in the embedding space and ranks them. The position of the listing the user eventually booked shows how early it could have been recommended. A higher rank means better embeddings, and the rank is averaged across all sessions in the validation dataset.",
+    "question_type": "procedural",
+    "evidence": {"book_id": "machine-learning-system-design-interview-aminian-xu", "chapter_number": 9, "section_title": "Offline metrics", "pages": [209]}
+  },
+  {
+    "id": "r024",
+    "query": "Which online metrics measure engagement for a personalized news feed?",
+    "ideal_answer": "Click-through rate (clicks divided by impressions), which is important but can be inflated by clickbait. Reaction rates such as like, share, comment, hide, block and skip rates, which are stronger signals because users explicitly express a preference. Total time spent over a fixed period, which captures passive as well as active users. And a user satisfaction rate from surveys, which asks users directly and is an accurate measure of effectiveness.",
+    "question_type": "factual",
+    "evidence": {"book_id": "machine-learning-system-design-interview-aminian-xu", "chapter_number": 10, "section_title": "Online metrics", "pages": [230, 231]}
+  },
+  {
+    "id": "r025",
+    "query": "How should you set success expectations and usefulness thresholds before building an AI application like a support chatbot?",
+    "ideal_answer": "The most important metric is business impact, for example the percentage of customer messages to automate, how many more messages can be processed, how much faster responses are and how much human labor is saved, alongside customer satisfaction and feedback. Before launch, define a usefulness threshold with quality metrics, latency metrics such as TTFT, TPOT and total latency (acceptable values depend on the use case), cost per inference request, and other metrics like interpretability and fairness.",
+    "question_type": "factual",
+    "evidence": {"book_id": "ai-engineering-chip-huyen", "chapter_number": 1, "section_title": "Setting Expectations", "pages": [85, 86]}
+  },
+  {
+    "id": "r026",
+    "query": "What are the cost and latency drawbacks of using AI judges, and how can they be reduced?",
+    "ideal_answer": "Using strong models as judges is expensive: generating and evaluating with GPT-4 roughly doubles API costs, and three evaluation criteria (such as quality, factual consistency and toxicity) quadruple the number of calls. Costs can be cut with weaker judge models or spot-checking, evaluating only a subset of responses, which trades confidence for cost. Using judges as production guardrails before returning responses also adds latency, which may rule them out for latency-sensitive applications. Even so, AI judges are much cheaper than human evaluators.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "ai-engineering-chip-huyen", "chapter_number": 3, "section_title": "Increased costs and latency", "pages": [288, 289]}
+  },
+  {
+    "id": "r027",
+    "query": "What data privacy concerns arise when using externally hosted model APIs?",
+    "ideal_answer": "Companies with strict privacy policies can't send data outside the organization; Samsung banned ChatGPT in May 2023 after employees leaked proprietary information into it. Some countries forbid sending certain data across borders, so providers must host servers there. Providers might use your data for training, and policies can change, as with Zoom's 2023 terms-of-service backlash. Models can memorize training samples (StarCoder memorizes 8% of its training set), which can then leak or be exploited.",
+    "question_type": "factual",
+    "evidence": {"book_id": "ai-engineering-chip-huyen", "chapter_number": 4, "section_title": "Data privacy", "pages": [364, 365, 366, 367]}
+  },
+  {
+    "id": "r028",
+    "query": "What techniques are used in direct manual prompt hacking to jailbreak a model?",
+    "ideal_answer": "Obfuscation: misspelling blocked keywords, mixing languages or Unicode, or inserting unusual special-character strings (such as a request followed by many exclamation marks), which a simple filter can block. Output formatting manipulation: hiding malicious intent in unexpected formats such as a poem, rap song, code or UwU text. Roleplaying: asking the model to play a role or scenario, as in the DAN (Do Anything Now) prompts from Reddit.",
+    "question_type": "factual",
+    "evidence": {"book_id": "ai-engineering-chip-huyen", "chapter_number": 5, "section_title": "Direct manual prompt hacking", "pages": [469, 470, 471]}
+  },
+  {
+    "id": "r029",
+    "query": "How does QLoRA reduce memory usage during finetuning?",
+    "ideal_answer": "Because a LoRA adapter's memory is tiny compared with the model's weights, reducing LoRA parameters barely helps; quantizing the weights is more effective. QLoRA stores model weights in 4 bits using NF4 (NormalFloat-4), which exploits the fact that pretrained weights usually follow a normal distribution with median zero, and dequantizes them to BF16 for the forward and backward pass. It also uses paged optimizers to move data between CPU and GPU when the GPU runs out of memory. This allows finetuning a 65B-parameter model on a single 48 GB GPU, producing the Guanaco models.",
+    "question_type": "conceptual",
+    "evidence": {"book_id": "ai-engineering-chip-huyen", "chapter_number": 7, "section_title": "Quantized LoRA", "pages": [661, 662, 663]}
+  },
+  {
+    "id": "r030",
+    "query": "How does speculative decoding speed up inference?",
+    "ideal_answer": "A faster, weaker draft model generates a sequence of K tokens, and the target model verifies them in parallel, accepting the longest left-to-right prefix it agrees with and then generating one extra token itself; the loop then repeats. Each loop yields between 1 and K+1 tokens. It is faster because verification is parallelizable while generation is sequential, effectively turning decoding into something like prefilling, and because some tokens are easy enough for a weaker draft model to predict.",
+    "question_type": "procedural",
+    "evidence": {"book_id": "ai-engineering-chip-huyen", "chapter_number": 9, "section_title": "Speculative decoding", "pages": [812, 813, 814, 815]}
+  }
+]

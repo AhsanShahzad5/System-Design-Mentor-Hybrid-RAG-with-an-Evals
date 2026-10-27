@@ -2,26 +2,17 @@
 
 import json
 
-from langchain_openai import ChatOpenAI
-
-from rag import RAGGraph
-from rag.state import ChatMessage
-from run_retrieval_pipeline import retrieve
+from app import build_app
+from rag import ChatMessage
 from settings import get_settings
-
-settings = get_settings()
-
-OPENAI_API_KEY = settings.openai_api_key.get_secret_value()
-GENERATION_MODEL = settings.generation_model
-BOOK_CATALOGUE_PATH = settings.book_catalogue_path
-RAG_INPUT_PATH = settings.rag_input_path
 
 
 def load_input() -> tuple[str, list[ChatMessage]]:
-    if not RAG_INPUT_PATH.is_file():
-        raise FileNotFoundError(f"RAG input file not found: {RAG_INPUT_PATH}")
+    input_path = get_settings().rag_input_path
+    if not input_path.is_file():
+        raise FileNotFoundError(f"RAG input file not found: {input_path}")
 
-    payload = json.loads(RAG_INPUT_PATH.read_text(encoding="utf-8"))
+    payload = json.loads(input_path.read_text(encoding="utf-8"))
     query = str(payload.get("query", "")).strip()
     history = payload.get("history", [])
 
@@ -35,17 +26,20 @@ def load_input() -> tuple[str, list[ChatMessage]]:
 
 def main() -> None:
     query, history = load_input()
-    model = ChatOpenAI(
-        model=GENERATION_MODEL,
-        verbosity="low",
-        api_key=OPENAI_API_KEY,  # type: ignore[arg-type]
-    )
-    graph = RAGGraph(
-        model=model,
-        retriever=retrieve,
-        catalogue_path=BOOK_CATALOGUE_PATH,
-    )
-    print(graph.invoke(query=query, history=history))
+    result = build_app().invoke(query=query, history=history)
+
+    print(f"route       : {result['route']}")
+    print(f"final query : {result['final_query']}")
+    print(f"\n{result['answer']}")
+
+    if result["documents"]:
+        print("\nSources:")
+        for rank, document in enumerate(result["documents"], start=1):
+            meta = document.metadata
+            print(
+                f"  [{rank}] {meta.get('book_id')} | {meta.get('chapter_title')} | "
+                f"{meta.get('section_title')} | p.{meta.get('page_number')}"
+            )
 
 
 if __name__ == "__main__":

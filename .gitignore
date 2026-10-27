@@ -26,4 +26,6 @@ processed_documents/
 
 
 
-rag/Agents.md
+
+# Golden context copied verbatim from the books (rebuild with golden_datasets/build_faithfulness_goldens.py)
+golden_datasets/faithfulness_goldens.json

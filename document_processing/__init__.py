@@ -4,6 +4,7 @@ from document_processing.book_configs import (
     BOOK_3,
     BOOK_4,
     BOOK_5,
+    BOOK_TITLES,
     BOOKS,
 )
 from document_processing.document_store import load_documents, save_documents
@@ -16,6 +17,7 @@ __all__ = [
     "BOOK_3",
     "BOOK_4",
     "BOOK_5",
+    "BOOK_TITLES",
     "BOOKS",
     "BookConfig",
     "Chapter",
