@@ -19,7 +19,7 @@ image-1.png
 experiments/
 
 # Generated document-processing artifacts
-processed_documents/
+processed_documents*/
 
 
 .env
@@ -29,3 +29,6 @@ processed_documents/
 
 # Golden context copied verbatim from the books (rebuild with golden_datasets/build_faithfulness_goldens.py)
 golden_datasets/faithfulness_goldens.json
+
+# Eval run logs
+eval_results/

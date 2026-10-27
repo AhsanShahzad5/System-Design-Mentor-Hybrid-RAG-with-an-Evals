@@ -17,6 +17,7 @@ dependencies = [
     "pymupdf4llm>=0.0.27",
     "pydantic-settings>=2.0.0",
     "python-dotenv>=1.2.2",
+    "portalocker[win32]>=4.4.0",
 ]
 
 [dependency-groups]

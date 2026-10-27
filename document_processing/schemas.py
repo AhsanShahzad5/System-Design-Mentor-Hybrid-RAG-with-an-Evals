@@ -17,3 +17,4 @@ class Chapter:
     number: int
     title: str
     start_page: int
+    end_page: int | None = None  # first page AFTER the chapter; None = end of book

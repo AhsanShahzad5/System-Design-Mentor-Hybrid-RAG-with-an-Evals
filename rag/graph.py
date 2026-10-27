@@ -5,6 +5,7 @@
 """
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -13,9 +14,13 @@ from langgraph.graph import END, START, StateGraph
 from langsmith import traceable
 
 from generation import Generator
+from generation.helpers import message_text
 from rag.chains import build_catalogue_answer_chain, build_query_analysis_chain
 from rag.nodes import RAGNodes, Retriever
-from rag.state import ChatMessage, RAGResult, RAGState
+from rag.state import ChatMessage, RAGResult, RAGState, merge_usage
+
+# Nodes whose model output is the user-facing answer (streamed as tokens).
+ANSWER_NODES = {"generate", "answer_catalogue"}
 
 
 def _trace_inputs(inputs: dict[str, Any]) -> dict[str, Any]:
@@ -90,10 +95,52 @@ class RAGGraph:
         query: str,
         history: list[ChatMessage] | None = None,
     ) -> RAGResult:
-        state = self._graph.invoke(
-            {"query": query, "history": history or [], "usage": {}}
-        )
+        state = self._graph.invoke(self._initial_state(query, history))
+        return self._to_result(query, state)
 
+    def stream(
+        self,
+        query: str,
+        history: list[ChatMessage] | None = None,
+    ) -> Iterator[tuple[str, Any]]:
+        """Stream one run as events, ending with the full result.
+
+        Yields ("token", text) while the answer is generated, ("node", name)
+        when each node finishes, and finally ("result", RAGResult).
+        """
+        initial = self._initial_state(query, history)
+        state: dict[str, Any] = dict(initial)
+
+        for mode, chunk in self._graph.stream(
+            initial, stream_mode=["messages", "updates"]
+        ):
+            if mode == "messages":
+                message, metadata = chunk
+                if metadata.get("langgraph_node") in ANSWER_NODES:
+                    text = message_text(message)
+                    if text:
+                        yield "token", text
+                continue
+
+            for node, patch in chunk.items():
+                for key, value in (patch or {}).items():
+                    state[key] = (
+                        merge_usage(state.get("usage", {}), value)
+                        if key == "usage"
+                        else value
+                    )
+                yield "node", node
+
+        yield "result", self._to_result(query, state)
+
+    @staticmethod
+    def _initial_state(
+        query: str, history: list[ChatMessage] | None
+    ) -> RAGState:
+        return {"query": query, "history": history or [], "usage": {}}
+
+    @staticmethod
+    def _to_result(query: str, state: dict[str, Any]) -> RAGResult:
         answer = state.get("answer")
         if not answer:
             raise ValueError("The graph finished without producing an answer.")

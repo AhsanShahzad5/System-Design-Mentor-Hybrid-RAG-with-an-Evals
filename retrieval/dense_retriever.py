@@ -9,6 +9,7 @@ RETURN_FIELDS = [
     "text",
     "book_id",
     "page_number",
+    "page_end",
     "chapter_number",
     "chapter_title",
     "section_title",

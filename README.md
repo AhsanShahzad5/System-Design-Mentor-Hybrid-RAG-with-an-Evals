@@ -38,10 +38,24 @@ For every configured `book_id`, this pipeline:
 
 1. Reads the PDF with PyMuPDF and `pymupdf4llm`, without OCR.
 2. Extracts layout-aware Markdown while preserving page boundaries.
-3. Detects numbered chapters from the embedded PDF table of contents.
-4. Normalizes Markdown headings into chapter and section information.
-5. Builds heading-aware LangChain `Document` objects.
-6. Filters empty content and saves one JSONL artifact per book.
+3. Detects numbered chapters and their page ranges from the embedded table of
+   contents. A chapter ends where the next entry at the same or a higher level
+   begins, so indexes and appendices aren't tagged as the last chapter.
+4. Skips front and back matter pages (copyright, table of contents, index,
+   about the author).
+5. Normalizes Markdown headings into chapter and section information, and drops
+   reference and bibliography sections.
+6. Cleans extraction artifacts (strikethrough and underline markup, `�`, split
+   hyphenation, shattered italic captions) from text and titles.
+7. Builds heading-aware LangChain `Document` objects and saves one JSONL
+   artifact per book.
+
+PDF parsing is the slow stage (image-heavy books can take hours). To apply new
+cleaning rules to an existing artifact without re-parsing:
+
+```powershell
+uv run python -m document_processing.migrate processed_documents processed_documents_v2
+```
 
 The documents preserve retrieval metadata:
 
@@ -77,10 +91,16 @@ The ingestion pipeline:
 
 1. Reconstructs documents from all five JSONL files.
 2. Merges the per-book collections.
-3. Splits them with `RecursiveCharacterTextSplitter`.
-4. Adds deterministic `chunk_id` and per-book `chunk_index` metadata.
-5. Generates dense embeddings with `text-embedding-3-large`.
-6. Stores each embedding, its original text, and metadata in Pinecone.
+3. Merges consecutive pages of the same section, so page breaks don't leave
+   fragments, and drops sections under 100 characters. Metadata keeps
+   `page_number` (first page) and `page_end`.
+4. Splits them with `RecursiveCharacterTextSplitter`.
+5. Prepends a `Book › Chapter › Section` header to each chunk, so BM25, dense
+   search and the reranker can see where the chunk comes from.
+6. Adds a stable `chunk_id` (a hash of the chunk's location and text, not its
+   position in the corpus) and a per-book `chunk_index`.
+7. Generates dense embeddings with `text-embedding-3-large`.
+8. Stores each embedding, its text, and metadata in Pinecone.
 
 Application settings are centralized in `settings.py`:
 

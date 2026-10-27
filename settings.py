@@ -60,6 +60,11 @@ class Settings(BaseSettings):
     rerank_model: str = "bge-reranker-v2-m3"
     generation_model: str = "gpt-5.6-luna"
 
+    # Evals: LLM-as-judge model (kept separate from the generation model)
+    eval_judge_model: str = "gpt-4.1-mini"
+    eval_threshold: float = 0.7
+    eval_max_workers: int = 4  # concurrent app calls while building test cases
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
