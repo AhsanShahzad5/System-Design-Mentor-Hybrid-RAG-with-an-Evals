@@ -28,6 +28,7 @@ class IngestionPipeline:
         embedding_batch_size: int = 100,
         upsert_batch_size: int = 20,
         document_loader: DocumentLoader = load_documents,
+        book_titles: Mapping[str, str] | None = None,
     ) -> None:
         self._document_paths = tuple(document_paths)
         self._text_splitter = text_splitter
@@ -37,6 +38,7 @@ class IngestionPipeline:
         self._embedding_batch_size = embedding_batch_size
         self._upsert_batch_size = upsert_batch_size
         self._document_loader = document_loader
+        self._book_titles = dict(book_titles or {})
 
     def validate(self) -> None:
         """Fail before processing if configuration or input files are invalid."""
@@ -77,7 +79,9 @@ class IngestionPipeline:
             for path in self._document_paths
         }
         all_documents = self.merge_documents(documents_by_book)
-        chunks = chunk_documents(all_documents, self._text_splitter)
+        chunks = chunk_documents(
+            all_documents, self._text_splitter, self._book_titles
+        )
 
         logger.info(
             "Built %d documents and %d chunks from %d books",

@@ -6,6 +6,7 @@ from pathlib import Path
 class BookConfig:
     book_id: str
     pdf_path: Path
+    title: str = ""
     section_title_overrides: dict[tuple[int, str], str] = field(
         default_factory=dict
     )
@@ -16,3 +17,4 @@ class Chapter:
     number: int
     title: str
     start_page: int
+    end_page: int | None = None  # first page AFTER the chapter; None = end of book

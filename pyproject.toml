@@ -1,26 +1,28 @@
 [project]
-name = "7-llm-evals"
+name = "book-mentor-rag"
 version = "0.1.0"
-description = "Add your description here"
+description = "Hybrid-search RAG mentor over five system design and AI engineering books, with an offline and online eval suite."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "chromadb>=1.5.9",
     "deepeval>=4.1.5",
-    "langchain-chroma>=1.1.0",
     "langchain-core>=1.5.3",
     "langchain-openai>=1.4.2",
     "langchain-text-splitters>=1.1.2",
     "langgraph>=1.0.0",
     "langsmith>=0.14.1",
     "openai>=2.53.0",
-    "pandas>=2.3.3",
     "pinecone>=10.0.0",
-    "portalocker[win32]>=4.4.0",
     "pymupdf>=1.26.4",
     "pymupdf4llm>=0.0.27",
     "pydantic-settings>=2.0.0",
-    "pytest>=9.1.1",
     "python-dotenv>=1.2.2",
-    "sentence-transformers>=5.7.0",
+    "portalocker[win32]>=4.4.0",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+    "pandas>=2.3.3",
+    "pytest>=9.1.1",
 ]

@@ -1,35 +1,57 @@
-"""Deterministic LangGraph workflow for catalogue and knowledge questions."""
+"""Deterministic LangGraph workflow for catalogue and knowledge questions.
+
+    analyze_query ─┬─ catalogue     → answer_catalogue ──────────→ END
+                   └─ rag_retrieval → retrieve → generate ───────→ END
+"""
 
 import json
-from collections.abc import Callable
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Literal
+from typing import Any
 
-from langchain_core.documents import Document
 from langchain_core.language_models.chat_models import BaseChatModel
 from langgraph.graph import END, START, StateGraph
+from langsmith import traceable
 
-from generation import GenerationPipeline
+from generation import Generator
+from generation.helpers import message_text
 from rag.chains import build_catalogue_answer_chain, build_query_analysis_chain
-from rag.schemas import QueryAnalysis
-from rag.state import ChatMessage, RAGState
+from rag.nodes import RAGNodes, Retriever
+from rag.state import ChatMessage, RAGResult, RAGState, merge_usage
+
+# Nodes whose model output is the user-facing answer (streamed as tokens).
+ANSWER_NODES = {"generate", "answer_catalogue"}
+
+
+def _trace_inputs(inputs: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in inputs.items() if key != "self"}
+
+
+def _trace_outputs(outputs: Any) -> dict[str, Any]:
+    """Keep context strings for online evals; log only metadata for documents."""
+    if not isinstance(outputs, dict):
+        return {"output": outputs}
+    traced = {key: value for key, value in outputs.items() if key != "documents"}
+    traced["sources"] = [document.metadata for document in outputs.get("documents", [])]
+    return traced
 
 
 class RAGGraph:
-    """Route catalogue questions or run the existing book RAG pipeline."""
+    """Route catalogue questions or retrieve book context and generate."""
 
     def __init__(
         self,
         model: BaseChatModel,
-        retriever: Callable[[str], list[Document]],
+        retriever: Retriever,
+        generator: Generator,
         catalogue_path: Path,
     ) -> None:
-        self._catalogue = self._load_catalogue(catalogue_path)
-        self._query_analysis_chain = build_query_analysis_chain(model)
-        self._catalogue_answer_chain = build_catalogue_answer_chain(model)
-        self._generation_pipeline = GenerationPipeline(
+        self._nodes = RAGNodes(
+            query_analysis_chain=build_query_analysis_chain(model),
+            catalogue_answer_chain=build_catalogue_answer_chain(model),
+            catalogue=self._load_catalogue(catalogue_path),
             retriever=retriever,
-            model=model,
+            generator=generator,
         )
         self._graph = self._build_graph()
 
@@ -43,95 +65,93 @@ class RAGGraph:
 
     def _build_graph(self):
         graph = StateGraph(RAGState)
-        graph.add_node("analyze_query", self._analyze_query)
-        graph.add_node("answer_catalogue", self._answer_catalogue)
-        graph.add_node("answer_with_rag", self._answer_with_rag)
+        graph.add_node("analyze_query", self._nodes.analyze_query)
+        graph.add_node("answer_catalogue", self._nodes.answer_catalogue)
+        graph.add_node("retrieve", self._nodes.retrieve)
+        graph.add_node("generate", self._nodes.generate)
 
         graph.add_edge(START, "analyze_query")
         graph.add_conditional_edges(
             "analyze_query",
-            self._route_query,
+            self._nodes.route_query,
             {
                 "catalogue": "answer_catalogue",
-                "rag_retrieval": "answer_with_rag",
+                "rag_retrieval": "retrieve",
             },
         )
+        graph.add_edge("retrieve", "generate")
         graph.add_edge("answer_catalogue", END)
-        graph.add_edge("answer_with_rag", END)
+        graph.add_edge("generate", END)
         return graph.compile()
 
-    def _analyze_query(self, state: RAGState) -> dict[str, object]:
-        query = state.get("query", "").strip()
-        if not query:
-            raise ValueError("Query cannot be empty.")
-
-        analysis = self._query_analysis_chain.invoke(
-            {
-                "query": query,
-                "history": json.dumps(
-                    state.get("history", []),
-                    ensure_ascii=False,
-                ),
-            }
-        )
-        if not isinstance(analysis, QueryAnalysis):
-            raise TypeError("Query analysis did not return QueryAnalysis.")
-
-        final_query = analysis.final_query.strip()
-        if not final_query:
-            raise ValueError("Query analysis returned an empty final query.")
-
-        return {
-            "final_query": final_query,
-            "route": analysis.route,
-        }
-
-    @staticmethod
-    def _route_query(
-        state: RAGState,
-    ) -> Literal["catalogue", "rag_retrieval"]:
-        route = state.get("route")
-        if route not in {"catalogue", "rag_retrieval"}:
-            raise ValueError(f"Invalid or missing route: {route}")
-        return route
-
-    def _answer_catalogue(self, state: RAGState) -> dict[str, str]:
-        final_query = state.get("final_query", "").strip()
-        if not final_query:
-            raise ValueError("A final query is required for catalogue generation.")
-
-        answer = self._catalogue_answer_chain.invoke(
-            {
-                "query": final_query,
-                "catalogue": self._catalogue,
-            }
-        )
-        if not answer.strip():
-            raise ValueError("Catalogue generation returned an empty answer.")
-        return {"answer": answer}
-
-    def _answer_with_rag(self, state: RAGState) -> dict[str, str]:
-        final_query = state.get("final_query", "").strip()
-        if not final_query:
-            raise ValueError("A final query is required for RAG generation.")
-
-        answer = self._generation_pipeline.invoke(final_query)
-        if not answer.strip():
-            raise ValueError("RAG generation returned an empty answer.")
-        return {"answer": answer}
-
+    @traceable(
+        name="rag-graph",
+        run_type="chain",
+        process_inputs=_trace_inputs,
+        process_outputs=_trace_outputs,
+    )
     def invoke(
         self,
         query: str,
         history: list[ChatMessage] | None = None,
-    ) -> str:
-        result = self._graph.invoke(
-            {
-                "query": query,
-                "history": history or [],
-            }
-        )
-        answer = result.get("answer")
+    ) -> RAGResult:
+        state = self._graph.invoke(self._initial_state(query, history))
+        return self._to_result(query, state)
+
+    def stream(
+        self,
+        query: str,
+        history: list[ChatMessage] | None = None,
+    ) -> Iterator[tuple[str, Any]]:
+        """Stream one run as events, ending with the full result.
+
+        Yields ("token", text) while the answer is generated, ("node", name)
+        when each node finishes, and finally ("result", RAGResult).
+        """
+        initial = self._initial_state(query, history)
+        state: dict[str, Any] = dict(initial)
+
+        for mode, chunk in self._graph.stream(
+            initial, stream_mode=["messages", "updates"]
+        ):
+            if mode == "messages":
+                message, metadata = chunk
+                if metadata.get("langgraph_node") in ANSWER_NODES:
+                    text = message_text(message)
+                    if text:
+                        yield "token", text
+                continue
+
+            for node, patch in chunk.items():
+                for key, value in (patch or {}).items():
+                    state[key] = (
+                        merge_usage(state.get("usage", {}), value)
+                        if key == "usage"
+                        else value
+                    )
+                yield "node", node
+
+        yield "result", self._to_result(query, state)
+
+    @staticmethod
+    def _initial_state(
+        query: str, history: list[ChatMessage] | None
+    ) -> RAGState:
+        return {"query": query, "history": history or [], "usage": {}}
+
+    @staticmethod
+    def _to_result(query: str, state: dict[str, Any]) -> RAGResult:
+        answer = state.get("answer")
         if not answer:
             raise ValueError("The graph finished without producing an answer.")
-        return answer
+
+        documents = state.get("documents", [])
+        return {
+            "query": query,
+            "final_query": state["final_query"],
+            "route": state["route"],
+            "answer": answer,
+            "documents": documents,
+            "context": [document.page_content for document in documents],
+            "usage": state.get("usage", {}),
+        }

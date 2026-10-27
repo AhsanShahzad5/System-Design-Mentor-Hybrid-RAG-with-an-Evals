@@ -1,4 +1,5 @@
 import re
+from collections.abc import Collection
 from typing import Any
 
 import pymupdf
@@ -6,17 +7,24 @@ from langchain_core.documents import Document
 
 from document_processing.pdf_parser import (
     chapter_for_page,
+    excluded_pages,
     extract_chapters,
     extract_markdown_pages,
 )
 from document_processing.schemas import BookConfig, Chapter
+from document_processing.text_cleaning import clean_markdown, clean_title
 
 HEADING_PATTERN = re.compile(r"^#{1,6}\s+(.+?)\s*$")
 
+# Bibliography sections: dense with titles and URLs, useless as answer context.
+REFERENCE_SECTION = re.compile(
+    r"^(references?|reference materials|bibliography|works cited)$", re.IGNORECASE
+)
+
 
 def clean_heading(title: str) -> str:
-    """Remove Markdown emphasis characters surrounding a heading."""
-    return title.strip().strip("*_` ")
+    """Remove Markdown emphasis and leaked markup surrounding a heading."""
+    return clean_title(title)
 
 
 def append_document(
@@ -27,8 +35,11 @@ def append_document(
     chapter: Chapter | None,
     section_title: str | None,
 ) -> None:
-    """Create a LangChain document when accumulated content is non-empty."""
-    content = "\n".join(lines).strip()
+    """Create a LangChain document when cleaned content is non-empty."""
+    if section_title and REFERENCE_SECTION.match(section_title):
+        return
+
+    content = clean_markdown("\n".join(lines))
     if not content:
         return
 
@@ -51,6 +62,7 @@ def markdown_pages_to_documents(
     markdown_pages: list[dict[str, Any]],
     chapters: list[Chapter],
     config: BookConfig,
+    skip_pages: Collection[int] = (),
 ) -> list[Document]:
     """Convert Markdown pages into page-bounded, heading-aware documents."""
     documents: list[Document] = []
@@ -61,14 +73,15 @@ def markdown_pages_to_documents(
         page_number = int(page_data["metadata"]["page_number"])
         markdown = str(page_data["text"]).strip()
 
-        if not markdown:
+        if not markdown or page_number in skip_pages:
             continue
 
         chapter = chapter_for_page(chapters, page_number)
+        chapter_number = chapter.number if chapter is not None else None
 
-        if chapter is not None and chapter.number != previous_chapter_number:
+        if chapter_number != previous_chapter_number:
             active_section = None
-            previous_chapter_number = chapter.number
+            previous_chapter_number = chapter_number
 
         section_lines: list[str] = []
 
@@ -90,6 +103,9 @@ def markdown_pages_to_documents(
             section_lines = []
 
             heading_title = clean_heading(heading_match.group(1))
+            if not heading_title:
+                continue
+
             is_chapter_heading = chapter is not None and (
                 heading_title == chapter.title or heading_title.endswith(chapter.title)
             )
@@ -129,6 +145,7 @@ def load_book_documents(config: BookConfig) -> list[Document]:
 
     with pymupdf.open(config.pdf_path) as pdf:
         chapters = extract_chapters(pdf)
+        skip_pages = excluded_pages(pdf)
         markdown_pages = extract_markdown_pages(pdf)
 
-    return markdown_pages_to_documents(markdown_pages, chapters, config)
+    return markdown_pages_to_documents(markdown_pages, chapters, config, skip_pages)

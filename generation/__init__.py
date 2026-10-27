@@ -1,5 +1,10 @@
 """Grounded answer generation for the book RAG system."""
 
-from generation.pipeline import GenerationPipeline
+from generation.generator import (
+    NO_CONTEXT_ANSWER,
+    Context,
+    GenerationResult,
+    Generator,
+)
 
-__all__ = ["GenerationPipeline"]
+__all__ = ["NO_CONTEXT_ANSWER", "Context", "GenerationResult", "Generator"]

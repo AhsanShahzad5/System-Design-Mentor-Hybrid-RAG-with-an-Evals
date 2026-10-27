@@ -1,17 +1,14 @@
 import logging
 
-from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langsmith import traceable
 from pinecone import Pinecone
 
-from document_processing import BOOKS
+from document_processing import BOOK_TITLES, BOOKS
 from document_processing.document_store import document_path
 from ingestion import IngestionPipeline, build_text_splitter
 from ingestion.helpers import ensure_hybrid_index
 from settings import get_settings
-
-load_dotenv()
 
 settings = get_settings()
 
@@ -68,6 +65,7 @@ def main():
         namespace=PINECONE_NAMESPACE,
         embedding_batch_size=EMBEDDING_BATCH_SIZE,
         upsert_batch_size=PINECONE_UPSERT_BATCH_SIZE,
+        book_titles=BOOK_TITLES,
     )
 
     # for langsmith tracing

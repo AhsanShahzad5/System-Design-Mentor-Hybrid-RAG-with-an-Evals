@@ -1,10 +1,15 @@
 from functools import lru_cache
 from pathlib import Path
 
+from dotenv import load_dotenv
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parent
+
+# Export .env to os.environ so libraries that read it directly (LangSmith
+# tracing, OpenAI/Pinecone SDK defaults) work from every entry point.
+load_dotenv(PROJECT_ROOT / ".env")
 BOOKS_DIRECTORY = PROJECT_ROOT / "books_data"
 PROCESSED_DOCUMENTS_DIRECTORY = PROJECT_ROOT / "processed_documents"
 BOOK_CATALOGUE_PATH = PROJECT_ROOT / "rag" / "data" / "book_catalogue.json"
@@ -54,6 +59,11 @@ class Settings(BaseSettings):
     # Reranking
     rerank_model: str = "bge-reranker-v2-m3"
     generation_model: str = "gpt-5.6-luna"
+
+    # Evals: LLM-as-judge model (kept separate from the generation model)
+    eval_judge_model: str = "gpt-4.1-mini"
+    eval_threshold: float = 0.7
+    eval_max_workers: int = 4  # concurrent app calls while building test cases
 
 
 @lru_cache(maxsize=1)
