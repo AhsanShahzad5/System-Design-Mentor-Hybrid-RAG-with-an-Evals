@@ -67,7 +67,7 @@ chapter_title
 section_title
 ```
 
-Artifacts are written atomically into `processed_documents/`. Existing complete
+Artifacts are written atomically into `processed_documents_v2/` (cleaned; the original parse is kept in `processed_documents/`). Existing complete
 files are skipped, so interrupted processing can restart without repeating
 finished books.
 
@@ -111,7 +111,7 @@ CHUNK_SIZE = 1200
 CHUNK_OVERLAP = 150
 EMBEDDING_BATCH_SIZE = 100
 PINECONE_UPSERT_BATCH_SIZE = 20
-PINECONE_NAMESPACE = "books"
+PINECONE_NAMESPACE = "books-v2"
 ```
 
 OpenAI processes 100 chunks per embedding request. Each result is divided into
@@ -127,8 +127,10 @@ text       English full-text-search field for BM25
 ```
 
 The runner creates this index when it is absent and rejects an incompatible
-existing schema without deleting it. The `books` namespace is created on the
-first upsert. The completed corpus currently contains 5,674 records.
+existing schema without deleting it. The `books-v2` namespace (cleaned corpus,
+4,195 records) is the default; the original `books` namespace (5,674 records) is
+kept for comparison. A namespace is created on the
+first upsert.
 
 ### LangSmith tracing
 

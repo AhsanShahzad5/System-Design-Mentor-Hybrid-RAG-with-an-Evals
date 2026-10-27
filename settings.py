@@ -11,7 +11,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 # tracing, OpenAI/Pinecone SDK defaults) work from every entry point.
 load_dotenv(PROJECT_ROOT / ".env")
 BOOKS_DIRECTORY = PROJECT_ROOT / "books_data"
-PROCESSED_DOCUMENTS_DIRECTORY = PROJECT_ROOT / "processed_documents"
+PROCESSED_DOCUMENTS_DIRECTORY = PROJECT_ROOT / "processed_documents_v2"
 BOOK_CATALOGUE_PATH = PROJECT_ROOT / "rag" / "data" / "book_catalogue.json"
 RAG_INPUT_PATH = PROJECT_ROOT / "input.json"
 
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     rag_input_path: Path = RAG_INPUT_PATH
 
     # Pinecone
-    pinecone_namespace: str = "books"
+    pinecone_namespace: str = "books-v2"  # cleaned corpus; "books" holds the original
     pinecone_cloud: str = "aws"
     pinecone_region: str = "us-east-1"
 
